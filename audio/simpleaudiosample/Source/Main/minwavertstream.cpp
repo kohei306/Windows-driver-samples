@@ -343,6 +343,13 @@ Return Value:
 
         ntStatus = m_ToneGenerator.Init(toneFrequency, toneAmplitudeDouble, toneDCOffsetDouble, toneInitialPhaseDouble, m_pWfExt);
 
+        if (g_pAudioRingBuffer != NULL)
+        {
+            if (g_pAudioRingBuffer->InitializeOutput(m_pWfExt) == false) {
+                ntStatus = STATUS_UNSUCCESSFUL;
+            }
+        }
+
         if (!NT_SUCCESS(ntStatus))
         {
             return ntStatus;
@@ -360,6 +367,11 @@ Return Value:
             ntStatus = m_SaveData.Initialize();
         }
     
+        if (g_pAudioRingBuffer != NULL)
+        {
+            g_pAudioRingBuffer->InitializeInput(DataFormat_);
+        }
+
         if (!NT_SUCCESS(ntStatus))
         {
             return ntStatus;
@@ -1406,7 +1418,11 @@ ByteDisplacement - # of bytes to process.
     {
         ULONG runWrite = min(ByteDisplacement, m_ulDmaBufferSize - bufferOffset);
         
-        m_ToneGenerator.GenerateSine(m_pDmaBuffer + bufferOffset, runWrite);
+        // m_ToneGenerator.GenerateSine(m_pDmaBuffer + bufferOffset, runWrite);
+        if (g_pAudioRingBuffer != NULL)
+        {
+            g_pAudioRingBuffer->ReadData(m_pDmaBuffer + bufferOffset, runWrite);
+        }
            	
         bufferOffset = (bufferOffset + runWrite) % m_ulDmaBufferSize;
         ByteDisplacement -= runWrite;
@@ -1438,7 +1454,11 @@ ByteDisplacement - # of bytes to process.
     while (ByteDisplacement > 0)
     {
         ULONG runWrite = min(ByteDisplacement, m_ulDmaBufferSize - bufferOffset);
-        m_SaveData.WriteData(m_pDmaBuffer + bufferOffset, runWrite);
+        // m_SaveData.WriteData(m_pDmaBuffer + bufferOffset, runWrite);
+        if (g_pAudioRingBuffer != NULL)
+        {
+            g_pAudioRingBuffer->WriteData(m_pDmaBuffer + bufferOffset, runWrite);
+        }
         bufferOffset = (bufferOffset + runWrite) % m_ulDmaBufferSize;
         ByteDisplacement -= runWrite;
     }

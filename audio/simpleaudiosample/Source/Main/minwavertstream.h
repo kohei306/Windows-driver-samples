@@ -16,6 +16,9 @@ Abstract:
 
 #include "savedata.h"
 #include "ToneGenerator.h"
+#include "audio_ring_buffer.h"
+
+extern AudioRingBuffer* g_pAudioRingBuffer;
 
 //
 // Structure to store notifications events in a protected list

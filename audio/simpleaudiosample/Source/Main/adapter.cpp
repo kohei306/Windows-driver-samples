@@ -22,7 +22,7 @@ Abstract:
 #include "definitions.h"
 #include "endpoints.h"
 #include "minipairs.h"
-
+#include "audio_ring_buffer.h"
 typedef void (*fnPcDriverUnload) (PDRIVER_OBJECT);
 fnPcDriverUnload gPCDriverUnloadRoutine = NULL;
 extern "C" DRIVER_UNLOAD DriverUnload;
@@ -51,6 +51,10 @@ DRIVER_DISPATCH PnpHandler;
 DWORD g_DoNotCreateDataFiles = 0;  // default is off.
 DWORD g_DisableToneGenerator = 0;  // default is to generate tones.
 UNICODE_STRING g_RegistryPath;      // This is used to store the registry settings path for the driver
+
+
+AudioRingBuffer* g_pAudioRingBuffer = NULL;
+#define AUDIORINGBUFFERPOOLTAG 'arb'
 
 //-----------------------------------------------------------------------------
 // Functions
@@ -116,6 +120,13 @@ Environment:
     if (WdfGetDriver() != NULL)
     {
         WdfDriverMiniportUnload(WdfGetDriver());
+    }
+
+    if (g_pAudioRingBuffer != NULL)
+    {
+        g_pAudioRingBuffer->Reset();
+        ExFreePoolWithTag(g_pAudioRingBuffer, AUDIORINGBUFFERPOOLTAG); // Free memory with the same tag used for allocation
+        g_pAudioRingBuffer = NULL;
     }
 Done:
     return;
@@ -344,6 +355,19 @@ Return Value:
     //
     gPCDriverUnloadRoutine = DriverObject->DriverUnload;
     DriverObject->DriverUnload = DriverUnload;
+
+    if (!g_pAudioRingBuffer) {
+        g_pAudioRingBuffer = (AudioRingBuffer*)ExAllocatePool2(
+            POOL_FLAG_NON_PAGED,
+            sizeof(AudioRingBuffer),
+            AUDIORINGBUFFERPOOLTAG);
+    }
+
+    if (!g_pAudioRingBuffer)
+    {
+        // Memory allocation failed
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     //
     // All done.

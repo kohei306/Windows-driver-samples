@@ -263,6 +263,7 @@
     </DriverSign>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="audio_ring_buffer.cpp" />
     <ClCompile Include="hw.cpp" />
     <ClCompile Include="kshelper.cpp" />
     <ClCompile Include="savedata.cpp" />
@@ -279,6 +280,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Exclude="@(ClInclude)" Include="*.h;*.hpp;*.hxx;*.hm;*.inl;*.xsd" />
+    <ClInclude Include="audio_ring_buffer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
